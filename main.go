@@ -56,11 +56,7 @@ func move(state GameState) BattlesnakeMoveResponse {
 
 	AvoidAllSnakes(state, isMoveSafe)
 
-	for _, snake := range state.Board.Snakes {
-		if snake.ID != state.You.ID && snake.Length >= state.You.Length {
-			avoidHead(surelyNotCollidesWithHead, state, snake)
-		}
-	}
+	AvoidHeadCollisions(state, surelyNotCollidesWithHead)
 
 	// Are there any safe moves left?
 	totallysafeMoves := []string{}
@@ -92,6 +88,14 @@ func move(state GameState) BattlesnakeMoveResponse {
 
 	log.Printf("MOVE %d: %s\n", state.Turn, nextMove)
 	return BattlesnakeMoveResponse{Move: nextMove}
+}
+
+func AvoidHeadCollisions(state GameState, surelyNotCollidesWithHead map[string]bool) {
+	for _, snake := range state.Board.Snakes {
+		if snake.ID != state.You.ID && snake.Length >= state.You.Length {
+			avoidHead(surelyNotCollidesWithHead, state, snake)
+		}
+	}
 }
 
 func AvoidAllSnakes(state GameState, isMoveSafe map[string]bool) {
