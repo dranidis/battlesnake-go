@@ -4,29 +4,15 @@ import (
 	"testing"
 )
 
-// type Board struct {
-// 	Height  int           `json:"height"`
-// 	Width   int           `json:"width"`
-// 	Food    []Coord       `json:"food"`
-// 	Hazards []Coord       `json:"hazards"`
-// 	Snakes  []Battlesnake `json:"snakes"`
-// }
-
 var board Board
-
-// type GameState struct {
-// 	Game  Game        `json:"game"`
-// 	Turn  int         `json:"turn"`
-// 	Board Board       `json:"board"`
-// 	You   Battlesnake `json:"you"`
-// }
-
 var gameState GameState
-
 var isMoveSafe = MakeTrueMap()
+var surelyNotCollidesWithHead = MakeTrueMap()
 
 func beforeEach() {
 	isMoveSafe = MakeTrueMap()
+	surelyNotCollidesWithHead = MakeTrueMap()
+	gameState = GameState{Game{}, 0, makeBoard(11), Battlesnake{}}
 }
 
 // Avoid walls
@@ -143,7 +129,10 @@ func makeSnake(coord ...Coord) Battlesnake {
 	return Battlesnake{"", "", 100, coord, coord[0], len(coord), "", "", Customizations{}}
 }
 
-func givenABoardOfSize(i int) {
-	board = Board{i, i, []Coord{}, []Coord{}, []Battlesnake{}}
-	gameState = GameState{Game{}, 0, board, Battlesnake{}}
+func makeBoard(size int) Board {
+	return Board{size, size, []Coord{}, []Coord{}, []Battlesnake{}}
+}
+
+func givenABoardOfSize(size int) {
+	gameState.Board = makeBoard(size)
 }
