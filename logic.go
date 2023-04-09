@@ -7,17 +7,17 @@ import (
 
 func getNextMove(state GameState) string {
 	isMoveSafe := MakeBooleanMap(true)
-	mayCollideWithLargerHead := MakeBooleanMap(false)
+	mayCollideWithLargerOrEqualHead := MakeBooleanMap(false)
 
 	AvoidWall(state, isMoveSafe)
 	AvoidAllSnakes(state, isMoveSafe)
-	AvoidHeadCollisions(state, mayCollideWithLargerHead)
+	FindPossibleLosingHeadCollisions(state, mayCollideWithLargerOrEqualHead)
 
 	totallySafeMoves := []string{}
 	partiallySafeMoves := []string{}
 
 	for move, isSafe := range isMoveSafe {
-		if isSafe && mayCollideWithLargerHead[move] {
+		if isSafe && !mayCollideWithLargerOrEqualHead[move] {
 			totallySafeMoves = append(totallySafeMoves, move)
 			partiallySafeMoves = append(partiallySafeMoves, move)
 		} else if isSafe {
@@ -47,10 +47,10 @@ func chooseMove(totallysafeMoves []string, partiallySafeMoves []string) string {
 	return nextMove
 }
 
-func AvoidHeadCollisions(state GameState, mayCollideWithLargerHead map[string]bool) {
+func FindPossibleLosingHeadCollisions(state GameState, mayCollideWithLargerOrEqualHead map[string]bool) {
 	for _, snake := range state.Board.Snakes {
 		if snake.ID != state.You.ID && snake.Length >= state.You.Length {
-			avoidHead(mayCollideWithLargerHead, state, snake)
+			findHeadCollisions(mayCollideWithLargerOrEqualHead, state, snake)
 		}
 	}
 }
@@ -95,21 +95,21 @@ func avoidSnake(isMoveSafe map[string]bool, state GameState, snake Battlesnake) 
 	}
 }
 
-func avoidHead(mayCollideWithLargerHead map[string]bool, state GameState, snake Battlesnake) {
+func findHeadCollisions(mayCollideWithHead map[string]bool, state GameState, snake Battlesnake) {
 	myHead := state.You.Head // Coordinates of your head
 	for _, otherNextHead := range nextMoves(snake.Head) {
 		if myHead.Y == otherNextHead.Y {
 			if myHead.X-1 == otherNextHead.X {
-				mayCollideWithLargerHead["left"] = true
+				mayCollideWithHead["left"] = true
 			} else if myHead.X+1 == otherNextHead.X {
-				mayCollideWithLargerHead["right"] = true
+				mayCollideWithHead["right"] = true
 			}
 		}
 		if myHead.X == otherNextHead.X {
 			if myHead.Y-1 == otherNextHead.Y {
-				mayCollideWithLargerHead["down"] = true
+				mayCollideWithHead["down"] = true
 			} else if myHead.Y+1 == otherNextHead.Y {
-				mayCollideWithLargerHead["up"] = true
+				mayCollideWithHead["up"] = true
 			}
 		}
 	}

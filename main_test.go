@@ -87,26 +87,42 @@ func TestChaseYourTail(t *testing.T) {
 	thenMoveIsSafe(t, "left")
 }
 
-func TestAvoidHeadColision(t *testing.T) {
+func TestAvoidHeadColisionWithEqual(t *testing.T) {
 	beforeEach()
 	givenABoardOfSize(5)
 	givenYourSnakeBodyIs(Coord{2, 2}, Coord{2, 1}, Coord{2, 0})
 	givenAnotherSnakeBodyIs(Coord{3, 3}, Coord{4, 3}, Coord{4, 4})
-	whenAvoidHeadColisions()
-	thenMoveIsNotTotallySafe(t, "right")
-	thenMoveIsNotTotallySafe(t, "up")
+	whenFindPossibleHeadColisions()
+	thenMoveMayCollideWithLargerHead(t, "right")
+	thenMoveMayCollideWithLargerHead(t, "up")
+}
+
+func TestDoNotAvoidHeadColisionWithSmaller(t *testing.T) {
+	beforeEach()
+	givenABoardOfSize(5)
+	givenYourSnakeBodyIs(Coord{2, 2}, Coord{2, 1}, Coord{2, 0})
+	givenAnotherSnakeBodyIs(Coord{3, 3}, Coord{4, 3})
+	whenFindPossibleHeadColisions()
+	thenMoveDoesNotCollideWithLargerHead(t, "right")
+	thenMoveDoesNotCollideWithLargerHead(t, "up")
 }
 
 // Implementation of BDD functions
 
-func thenMoveIsNotTotallySafe(t *testing.T, s string) {
+func thenMoveMayCollideWithLargerHead(t *testing.T, s string) {
 	if !mayCollideWithLargerHead[s] {
 		t.Errorf("Move %v does not collide at head %v", s, gameState.You.Head)
 	}
 }
 
-func whenAvoidHeadColisions() {
-	AvoidHeadCollisions(gameState, mayCollideWithLargerHead)
+func thenMoveDoesNotCollideWithLargerHead(t *testing.T, s string) {
+	if mayCollideWithLargerHead[s] {
+		t.Errorf("Move %v may collide at head %v", s, gameState.You.Head)
+	}
+}
+
+func whenFindPossibleHeadColisions() {
+	FindPossibleLosingHeadCollisions(gameState, mayCollideWithLargerHead)
 }
 
 func whenAvoidWalls() {
