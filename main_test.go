@@ -123,6 +123,8 @@ func TestMoveTowardsClosestFood(t *testing.T) {
 	thenMoveIsTowardsFood(t, "up")
 }
 
+// Implementation of BDD helper functions
+
 func thenMoveIsTowardsFood(t *testing.T, s string) {
 	if !moveTowardsFood[s] {
 		t.Errorf("Move %v is not towards food at head %v", s, gameState.You.Head)
@@ -137,8 +139,6 @@ func whenMoveTowardsClosestFood() {
 func givenFoodAt(coord ...Coord) {
 	gameState.Board.Food = append(gameState.Board.Food, coord...)
 }
-
-// Implementation of BDD functions
 
 func thenMoveMayCollideWithLargerHead(t *testing.T, s string) {
 	if !mayCollideWithLargerHead[s] {

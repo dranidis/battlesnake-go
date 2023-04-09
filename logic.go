@@ -13,6 +13,16 @@ func getNextMove(state GameState) string {
 	AvoidAllSnakes(state, isMoveSafe)
 	FindPossibleLosingHeadCollisions(state, mayCollideWithLargerOrEqualHead)
 
+	totallySafeMoves, partiallySafeMoves := getNextSafeMoves(isMoveSafe, mayCollideWithLargerOrEqualHead)
+
+	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
+	// food := state.Board.Food
+
+	nextMove := chooseNextMove(state, totallySafeMoves, partiallySafeMoves)
+	return nextMove
+}
+
+func getNextSafeMoves(isMoveSafe map[string]bool, mayCollideWithLargerOrEqualHead map[string]bool) ([]string, []string) {
 	totallySafeMoves := []string{}
 	partiallySafeMoves := []string{}
 
@@ -26,12 +36,7 @@ func getNextMove(state GameState) string {
 	}
 	log.Printf("Total Safe: %v", totallySafeMoves)
 	log.Printf("Part  Safe: %v", partiallySafeMoves)
-
-	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-	// food := state.Board.Food
-
-	nextMove := chooseNextMove(state, totallySafeMoves, partiallySafeMoves)
-	return nextMove
+	return totallySafeMoves, partiallySafeMoves
 }
 
 func chooseNextMove(state GameState, totallysafeMoves []string, partiallySafeMoves []string) string {
@@ -57,12 +62,12 @@ func chooseAMove(state GameState, moves []string) string {
 		}
 	}
 	if len(foodMoves) > 0 {
-		return chooseARandomMove(foodMoves)
+		return randomChoice(foodMoves)
 	}
-	return chooseARandomMove(moves)
+	return randomChoice(moves)
 }
 
-func chooseARandomMove(moves []string) string {
+func randomChoice(moves []string) string {
 	return moves[rand.Intn(len(moves))]
 }
 
