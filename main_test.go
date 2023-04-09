@@ -4,14 +4,13 @@ import (
 	"testing"
 )
 
-var board Board
 var gameState GameState
-var isMoveSafe = MakeTrueMap()
-var surelyNotCollidesWithHead = MakeTrueMap()
+var isMoveSafe map[string]bool
+var mayCollideWithLargerHead map[string]bool
 
 func beforeEach() {
-	isMoveSafe = MakeTrueMap()
-	surelyNotCollidesWithHead = MakeTrueMap()
+	isMoveSafe = MakeBooleanMap(true)
+	mayCollideWithLargerHead = MakeBooleanMap(false)
 	gameState = GameState{Game{}, 0, makeBoard(11), Battlesnake{}}
 }
 
@@ -88,7 +87,27 @@ func TestChaseYourTail(t *testing.T) {
 	thenMoveIsSafe(t, "left")
 }
 
+func TestAvoidHeadColision(t *testing.T) {
+	beforeEach()
+	givenABoardOfSize(5)
+	givenYourSnakeBodyIs(Coord{2, 2}, Coord{2, 1}, Coord{2, 0})
+	givenAnotherSnakeBodyIs(Coord{3, 3}, Coord{4, 3}, Coord{4, 4})
+	whenAvoidHeadColisions()
+	thenMoveIsNotTotallySafe(t, "right")
+	thenMoveIsNotTotallySafe(t, "up")
+}
+
 // Implementation of BDD functions
+
+func thenMoveIsNotTotallySafe(t *testing.T, s string) {
+	if !mayCollideWithLargerHead[s] {
+		t.Errorf("Move %v does not collide at head %v", s, gameState.You.Head)
+	}
+}
+
+func whenAvoidHeadColisions() {
+	AvoidHeadCollisions(gameState, mayCollideWithLargerHead)
+}
 
 func whenAvoidWalls() {
 	AvoidWall(gameState, isMoveSafe)

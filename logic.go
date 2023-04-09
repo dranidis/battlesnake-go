@@ -6,32 +6,35 @@ import (
 )
 
 func getNextMove(state GameState) string {
-	isMoveSafe := MakeTrueMap()
-
-	surelyNotCollidesWithHead := MakeTrueMap()
+	isMoveSafe := MakeBooleanMap(true)
+	mayCollideWithLargerHead := MakeBooleanMap(false)
 
 	AvoidWall(state, isMoveSafe)
-
 	AvoidAllSnakes(state, isMoveSafe)
+	AvoidHeadCollisions(state, mayCollideWithLargerHead)
 
-	AvoidHeadCollisions(state, surelyNotCollidesWithHead)
-	totallysafeMoves := []string{}
+	totallySafeMoves := []string{}
 	partiallySafeMoves := []string{}
 
 	for move, isSafe := range isMoveSafe {
-		if isSafe && surelyNotCollidesWithHead[move] {
-			totallysafeMoves = append(totallysafeMoves, move)
+		if isSafe && mayCollideWithLargerHead[move] {
+			totallySafeMoves = append(totallySafeMoves, move)
 			partiallySafeMoves = append(partiallySafeMoves, move)
 		} else if isSafe {
 			partiallySafeMoves = append(partiallySafeMoves, move)
 		}
 	}
-	log.Printf("Total Safe: %v", totallysafeMoves)
+	log.Printf("Total Safe: %v", totallySafeMoves)
 	log.Printf("Part  Safe: %v", partiallySafeMoves)
 
 	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
 	// food := state.Board.Food
 
+	nextMove := chooseMove(totallySafeMoves, partiallySafeMoves)
+	return nextMove
+}
+
+func chooseMove(totallysafeMoves []string, partiallySafeMoves []string) string {
 	nextMove := ""
 
 	if len(totallysafeMoves) > 0 {
@@ -44,10 +47,10 @@ func getNextMove(state GameState) string {
 	return nextMove
 }
 
-func AvoidHeadCollisions(state GameState, surelyNotCollidesWithHead map[string]bool) {
+func AvoidHeadCollisions(state GameState, mayCollideWithLargerHead map[string]bool) {
 	for _, snake := range state.Board.Snakes {
 		if snake.ID != state.You.ID && snake.Length >= state.You.Length {
-			avoidHead(surelyNotCollidesWithHead, state, snake)
+			avoidHead(mayCollideWithLargerHead, state, snake)
 		}
 	}
 }
@@ -89,25 +92,24 @@ func avoidSnake(isMoveSafe map[string]bool, state GameState, snake Battlesnake) 
 				isMoveSafe["up"] = false
 			}
 		}
-
 	}
 }
 
-func avoidHead(isMoveSafe map[string]bool, state GameState, snake Battlesnake) {
+func avoidHead(mayCollideWithLargerHead map[string]bool, state GameState, snake Battlesnake) {
 	myHead := state.You.Head // Coordinates of your head
 	for _, otherNextHead := range nextMoves(snake.Head) {
 		if myHead.Y == otherNextHead.Y {
 			if myHead.X-1 == otherNextHead.X {
-				isMoveSafe["left"] = false
+				mayCollideWithLargerHead["left"] = true
 			} else if myHead.X+1 == otherNextHead.X {
-				isMoveSafe["right"] = false
+				mayCollideWithLargerHead["right"] = true
 			}
 		}
 		if myHead.X == otherNextHead.X {
 			if myHead.Y-1 == otherNextHead.Y {
-				isMoveSafe["down"] = false
+				mayCollideWithLargerHead["down"] = true
 			} else if myHead.Y+1 == otherNextHead.Y {
-				isMoveSafe["up"] = false
+				mayCollideWithLargerHead["up"] = true
 			}
 		}
 	}
@@ -117,11 +119,11 @@ func nextMoves(snakeHead Coord) []Coord {
 	return []Coord{{snakeHead.X + 1, snakeHead.Y}, {snakeHead.X - 1, snakeHead.Y}, {snakeHead.X, snakeHead.Y + 1}, {snakeHead.X, snakeHead.Y - 1}}
 }
 
-func MakeTrueMap() map[string]bool {
+func MakeBooleanMap(value bool) map[string]bool {
 	return map[string]bool{
-		"up":    true,
-		"down":  true,
-		"left":  true,
-		"right": true,
+		"up":    value,
+		"down":  value,
+		"left":  value,
+		"right": value,
 	}
 }
