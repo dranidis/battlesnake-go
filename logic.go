@@ -30,24 +30,39 @@ func getNextMove(state GameState) string {
 	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
 	// food := state.Board.Food
 
-	nextMove := chooseNextMove(totallySafeMoves, partiallySafeMoves)
+	nextMove := chooseNextMove(state, totallySafeMoves, partiallySafeMoves)
 	return nextMove
 }
 
-func chooseNextMove(totallysafeMoves []string, partiallySafeMoves []string) string {
+func chooseNextMove(state GameState, totallysafeMoves []string, partiallySafeMoves []string) string {
 	nextMove := ""
 
 	if len(totallysafeMoves) > 0 {
-		nextMove = chooseAMove(totallysafeMoves)
+		nextMove = chooseAMove(state, totallysafeMoves)
 	} else if len(partiallySafeMoves) > 0 {
-		nextMove = chooseAMove(partiallySafeMoves)
+		nextMove = chooseAMove(state, partiallySafeMoves)
 	} else {
 		nextMove = "down"
 	}
 	return nextMove
 }
 
-func chooseAMove(moves []string) string {
+func chooseAMove(state GameState, moves []string) string {
+	foodMoves := []string{}
+	moveTowardsFood := MakeBooleanMap(false)
+	FindFood(state, moves, moveTowardsFood)
+	for move, isFood := range moveTowardsFood {
+		if isFood {
+			foodMoves = append(foodMoves, move)
+		}
+	}
+	if len(foodMoves) > 0 {
+		return chooseARandomMove(foodMoves)
+	}
+	return chooseARandomMove(moves)
+}
+
+func chooseARandomMove(moves []string) string {
 	return moves[rand.Intn(len(moves))]
 }
 

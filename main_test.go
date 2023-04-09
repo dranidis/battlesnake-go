@@ -7,11 +7,13 @@ import (
 var gameState GameState
 var isMoveSafe map[string]bool
 var mayCollideWithLargerHead map[string]bool
+var moveTowardsFood map[string]bool
 
 func beforeEach() {
 	isMoveSafe = MakeBooleanMap(true)
 	mayCollideWithLargerHead = MakeBooleanMap(false)
-	gameState = GameState{Game{}, 0, makeBoard(11), Battlesnake{}}
+	moveTowardsFood = MakeBooleanMap(false)
+	gameState = MakeGameState(MakeBoard(11), Battlesnake{})
 }
 
 // Avoid walls
@@ -87,6 +89,8 @@ func TestChaseYourTail(t *testing.T) {
 	thenMoveIsSafe(t, "left")
 }
 
+// Head collisions
+
 func TestAvoidHeadColisionWithEqual(t *testing.T) {
 	beforeEach()
 	givenABoardOfSize(5)
@@ -105,6 +109,33 @@ func TestDoNotAvoidHeadColisionWithSmaller(t *testing.T) {
 	whenFindPossibleHeadColisions()
 	thenMoveDoesNotCollideWithLargerHead(t, "right")
 	thenMoveDoesNotCollideWithLargerHead(t, "up")
+}
+
+// Food
+
+func TestMoveTowardsClosestFood(t *testing.T) {
+	beforeEach()
+	givenABoardOfSize(5)
+	givenFoodAt(Coord{4, 4})
+	givenYourSnakeBodyIs(Coord{2, 2}, Coord{2, 1}, Coord{2, 0})
+	whenMoveTowardsClosestFood()
+	thenMoveIsTowardsFood(t, "right")
+	thenMoveIsTowardsFood(t, "up")
+}
+
+func thenMoveIsTowardsFood(t *testing.T, s string) {
+	if !moveTowardsFood[s] {
+		t.Errorf("Move %v is not towards food at head %v", s, gameState.You.Head)
+	}
+}
+
+func whenMoveTowardsClosestFood() {
+	possibleMoves := []string{"up", "down", "left", "right"}
+	FindFood(gameState, possibleMoves, moveTowardsFood)
+}
+
+func givenFoodAt(coord ...Coord) {
+	gameState.Board.Food = append(gameState.Board.Food, coord...)
 }
 
 // Implementation of BDD functions
@@ -146,28 +177,17 @@ func thenMoveIsSafe(t *testing.T, s string) {
 }
 
 func givenYourSnakeBodyIs(coord ...Coord) {
-	gameState.You = makeSnake(coord...)
+	gameState.You = MakeSnake(coord...)
 	gameState.You.ID = "me"
 	gameState.Board.Snakes = append(gameState.Board.Snakes, gameState.You)
 }
 
 func givenAnotherSnakeBodyIs(coord ...Coord) {
-	other := makeSnake(coord...)
+	other := MakeSnake(coord...)
 	other.ID = "other"
 	gameState.Board.Snakes = append(gameState.Board.Snakes, other)
 }
 
-func makeSnake(coord ...Coord) Battlesnake {
-	if len(coord) == 0 {
-		panic("makeSnake: empty body")
-	}
-	return Battlesnake{"", "", 100, coord, coord[0], len(coord), "", "", Customizations{}}
-}
-
-func makeBoard(size int) Board {
-	return Board{size, size, []Coord{}, []Coord{}, []Battlesnake{}}
-}
-
 func givenABoardOfSize(size int) {
-	gameState.Board = makeBoard(size)
+	gameState.Board = MakeBoard(size)
 }
