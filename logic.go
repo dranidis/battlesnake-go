@@ -13,6 +13,16 @@ func getNextMove(state GameState) string {
 	AvoidAllSnakes(state, isMoveSafe)
 	FindPossibleLosingHeadCollisions(state, mayCollideWithLargerOrEqualHead)
 
+	totallySafeMoves, partiallySafeMoves := getNextSafeMoves(isMoveSafe, mayCollideWithLargerOrEqualHead)
+
+	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
+	// food := state.Board.Food
+
+	nextMove := chooseNextMove(state, totallySafeMoves, partiallySafeMoves)
+	return nextMove
+}
+
+func getNextSafeMoves(isMoveSafe map[string]bool, mayCollideWithLargerOrEqualHead map[string]bool) ([]string, []string) {
 	totallySafeMoves := []string{}
 	partiallySafeMoves := []string{}
 
@@ -26,28 +36,56 @@ func getNextMove(state GameState) string {
 	}
 	log.Printf("Total Safe: %v", totallySafeMoves)
 	log.Printf("Part  Safe: %v", partiallySafeMoves)
-
-	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-	// food := state.Board.Food
-
-	nextMove := chooseNextMove(state, totallySafeMoves, partiallySafeMoves)
-	return nextMove
+	return totallySafeMoves, partiallySafeMoves
 }
 
 func chooseNextMove(state GameState, totallysafeMoves []string, partiallySafeMoves []string) string {
-	nextMove := ""
+	var nextMoves []string
 
 	if len(totallysafeMoves) > 0 {
-		nextMove = chooseAMove(state, totallysafeMoves)
+		nextMoves = totallysafeMoves
 	} else if len(partiallySafeMoves) > 0 {
-		nextMove = chooseAMove(state, partiallySafeMoves)
+		nextMoves = partiallySafeMoves
 	} else {
-		nextMove = "down"
+		nextMoves = []string{"down"}
 	}
-	return nextMove
+
+	nextMoves = MaxFloodFillMoves(state, nextMoves)
+
+	return chooseAMoveTowardsFood(state, nextMoves)
 }
 
-func chooseAMove(state GameState, moves []string) string {
+func MaxFloodFillMoves(state GameState, nextMoves []string) []string {
+	maxMoves := []string{}
+	floodFillValues := make(map[string]int)
+
+	for _, move := range nextMoves {
+		floodFill := floodFillCount(state, move)
+		floodFillValues[move] = floodFill
+		if floodFill > len(state.You.Body) {
+			maxMoves = append(maxMoves, move)
+		}
+	}
+	log.Printf("FF %v\n", floodFillValues)
+
+	if len(maxMoves) > 0 {
+		return maxMoves
+	} else {
+		// select larger floodfill
+		// todo: select aread with tail if tail is reachable
+		max := 0
+		maxKey := ""
+		for key, value := range floodFillValues {
+			if value > max {
+				max = value
+				maxKey = key
+			}
+		}
+		return []string{maxKey}
+	}
+}
+
+func chooseAMoveTowardsFood(state GameState, moves []string) string {
 	foodMoves := []string{}
 	moveTowardsFood := MakeBooleanMap(false)
 	FindFood(state, moves, moveTowardsFood)
@@ -57,12 +95,12 @@ func chooseAMove(state GameState, moves []string) string {
 		}
 	}
 	if len(foodMoves) > 0 {
-		return chooseARandomMove(foodMoves)
+		return randomChoice(foodMoves)
 	}
-	return chooseARandomMove(moves)
+	return randomChoice(moves)
 }
 
-func chooseARandomMove(moves []string) string {
+func randomChoice(moves []string) string {
 	return moves[rand.Intn(len(moves))]
 }
 
