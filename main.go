@@ -45,7 +45,7 @@ func end(state GameState) {
 // Valid moves are "up", "down", "left", or "right"
 // See https://docs.battlesnake.com/api/example-move for available data
 func move(state GameState) BattlesnakeMoveResponse {
-	log.Printf("TURN %d: %d %d\n", state.Turn, state.You.Head.X, state.You.Head.Y)
+	log.Printf("\nTURN %d: %d %d\n", state.Turn, state.You.Head.X, state.You.Head.Y)
 
 	nextMove := getNextMove(state)
 

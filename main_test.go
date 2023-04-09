@@ -8,11 +8,13 @@ var gameState GameState
 var isMoveSafe map[string]bool
 var mayCollideWithLargerHead map[string]bool
 var moveTowardsFood map[string]bool
+var floodFillMoves []string
 
 func beforeEach() {
 	isMoveSafe = MakeBooleanMap(true)
 	mayCollideWithLargerHead = MakeBooleanMap(false)
 	moveTowardsFood = MakeBooleanMap(false)
+	floodFillMoves = []string{}
 	gameState = MakeGameState(MakeBoard(11), Battlesnake{})
 }
 
@@ -123,7 +125,31 @@ func TestMoveTowardsClosestFood(t *testing.T) {
 	thenMoveIsTowardsFood(t, "up")
 }
 
+// Floodfill
+func TestMaxFloodFillMoves(t *testing.T) {
+	beforeEach()
+	givenABoardOfSize(5)
+	givenYourSnakeBodyIs(Coord{1, 0}, Coord{1, 1}, Coord{1, 2}, Coord{0, 2}, Coord{0, 3}, Coord{0, 4})
+	whenMaxFloodFillMoves([]string{"left", "right"})
+	thenNextMovesAfterFloodFillAre(t, []string{"right"})
+}
+
 // Implementation of BDD helper functions
+
+func thenNextMovesAfterFloodFillAre(t *testing.T, moves []string) {
+	if len(moves) != len(floodFillMoves) {
+		t.Errorf("Different moves %v %v", moves, floodFillMoves)
+	}
+	for _, move := range moves {
+		if !contains(floodFillMoves, move) {
+			t.Errorf("Different moves %v %v", moves, floodFillMoves)
+		}
+	}
+}
+
+func whenMaxFloodFillMoves(moves []string) {
+	floodFillMoves = MaxFloodFillMoves(gameState, moves)
+}
 
 func thenMoveIsTowardsFood(t *testing.T, s string) {
 	if !moveTowardsFood[s] {
