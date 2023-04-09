@@ -30,21 +30,25 @@ func getNextMove(state GameState) string {
 	// TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
 	// food := state.Board.Food
 
-	nextMove := chooseMove(totallySafeMoves, partiallySafeMoves)
+	nextMove := chooseNextMove(totallySafeMoves, partiallySafeMoves)
 	return nextMove
 }
 
-func chooseMove(totallysafeMoves []string, partiallySafeMoves []string) string {
+func chooseNextMove(totallysafeMoves []string, partiallySafeMoves []string) string {
 	nextMove := ""
 
 	if len(totallysafeMoves) > 0 {
-		nextMove = totallysafeMoves[rand.Intn(len(totallysafeMoves))]
+		nextMove = chooseAMove(totallysafeMoves)
 	} else if len(partiallySafeMoves) > 0 {
-		nextMove = partiallySafeMoves[rand.Intn(len(partiallySafeMoves))]
+		nextMove = chooseAMove(partiallySafeMoves)
 	} else {
 		nextMove = "down"
 	}
 	return nextMove
+}
+
+func chooseAMove(moves []string) string {
+	return moves[rand.Intn(len(moves))]
 }
 
 func FindPossibleLosingHeadCollisions(state GameState, mayCollideWithLargerOrEqualHead map[string]bool) {
